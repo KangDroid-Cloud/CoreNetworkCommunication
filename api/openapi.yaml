@@ -1,0 +1,142 @@
+openapi: 3.0.2
+info:
+  title: KangDroid Cloud OpenAPI Description
+  version: "1.0"
+servers:
+- description: Local Server API
+  url: https://localhost:7121
+tags:
+- description: Account-Related API
+  name: Account
+- description: Auth-Related API
+  name: Auth
+paths:
+  /api/account/register:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRegisterRequest'
+      responses:
+        "200":
+          description: When successfully created account.
+        "400":
+          content:
+            application/json:
+              examples:
+                BadRequest:
+                  $ref: '#/components/examples/BadRegisterRequest'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: When one of fields are not valid.
+        "409":
+          content:
+            application/json:
+              examples:
+                EmailConflict:
+                  $ref: '#/components/examples/RegisterConflict'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: When same user email already exists on service.
+      summary: Register to KangDroid Cloud Service.
+      tags:
+      - Account
+  /api/auth/login:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          description: When login succeed.
+        "401":
+          content:
+            application/json:
+              examples:
+                LoginFailed:
+                  $ref: '#/components/examples/LoginUnauthorized'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: When one of credential is wrong.
+      summary: Login to KangDroid Cloud Service.
+      tags:
+      - Auth
+components:
+  examples:
+    BadRegisterRequest:
+      description: When one of registration field does not mat requirements.
+      value:
+        traceId: 0000-0000-0000
+        message: Requested Form is invalid! Please check email address is valid, and
+          password is at least 8 letters or more.
+    RegisterConflict:
+      description: When same email address already exists.
+      value:
+        traceId: 0000-0000-0000
+        message: User email "testEmail" already exists!
+    LoginUnauthorized:
+      description: When one of credential does not matches our server.
+      value:
+        traceId: 0000-0000-0000
+        message: Please check your email or password!
+  schemas:
+    LoginResponse:
+      example:
+        validUntil: 2000-01-23T04:56:07.000+00:00
+        token: token
+      properties:
+        token:
+          description: Random Access Token - Valid for 20min.
+          type: string
+        validUntil:
+          description: ISO8601-format Token valid-time.
+          format: date-time
+          type: string
+      type: object
+    LoginRequest:
+      example:
+        password: password
+        email: email
+      properties:
+        email:
+          description: Email Address
+          format: email
+          type: string
+        password:
+          description: Password
+          format: password
+          type: string
+      type: object
+    AccountRegisterRequest:
+      example:
+        password: password
+        nickName: nickName
+        email: email
+      properties:
+        email:
+          description: Email Address to register.
+          format: email
+          type: string
+        password:
+          description: The Password
+          type: string
+        nickName:
+          description: Nickname to use in our service.
+          type: string
+      type: object
+    ErrorResponse:
+      properties:
+        traceId:
+          description: HTTP Context Traceable ID
+          type: string
+        message:
+          description: Error Message
+          type: string
+      type: object
